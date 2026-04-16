@@ -1,9 +1,12 @@
 name: monitor booking status
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */3 * * *'
+    - cron: '0 9,21 * * *'
 
 jobs:
   run-monitor:
