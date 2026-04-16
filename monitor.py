@@ -1,4 +1,3 @@
-from pathlib import Path
 from datetime import datetime
 import pandas as pd
 from selenium import webdriver
@@ -6,7 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 TARGETS_FILE = "targets.csv"
-OUTPUT_FILE = "page_texts.csv"
+OUTPUT_FILE = "iframes.csv"
 
 def main():
     targets = pd.read_csv(TARGETS_FILE)
@@ -28,17 +27,27 @@ def main():
             driver.get(url)
             driver.implicitly_wait(10)
 
-            body_text = driver.find_element(By.TAG_NAME, "body").text
+            iframes = driver.find_elements(By.TAG_NAME, "iframe")
 
-            rows.append({
-                "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "space_name": space_name,
-                "url": url,
-                "page_text": body_text
-            })
+            if not iframes:
+                rows.append({
+                    "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "space_name": space_name,
+                    "page_url": url,
+                    "iframe_index": "",
+                    "iframe_src": "NO_IFRAME"
+                })
+            else:
+                for i, iframe in enumerate(iframes):
+                    rows.append({
+                        "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "space_name": space_name,
+                        "page_url": url,
+                        "iframe_index": i,
+                        "iframe_src": iframe.get_attribute("src")
+                    })
 
-        out_df = pd.DataFrame(rows)
-        out_df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
+        pd.DataFrame(rows).to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
         print(f"saved: {OUTPUT_FILE}")
 
     finally:
