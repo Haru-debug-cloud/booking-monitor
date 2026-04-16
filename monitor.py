@@ -1,3 +1,4 @@
+from pathlib import Path
 from datetime import datetime
 import pandas as pd
 from selenium import webdriver
@@ -26,7 +27,14 @@ def main():
 
             driver.get(url)
             driver.implicitly_wait(10)
-
+            
+# カレンダーボタン押す
+try:
+    button = driver.find_element(By.XPATH, "//button[contains(., '空室カレンダー')]")
+    button.click()
+    driver.implicitly_wait(5)
+except:
+    pass
             iframes = driver.find_elements(By.TAG_NAME, "iframe")
 
             if not iframes:
