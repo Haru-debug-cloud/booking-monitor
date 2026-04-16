@@ -1,4 +1,3 @@
-from pathlib import Path
 from datetime import datetime
 import pandas as pd
 from selenium import webdriver
@@ -6,7 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 TARGETS_FILE = "targets.csv"
-OUTPUT_FILE = "iframes.csv"
+OUTPUT_FILE = "page_texts.csv"
 
 def main():
     targets = pd.read_csv(TARGETS_FILE)
@@ -27,36 +26,31 @@ def main():
 
             driver.get(url)
             driver.implicitly_wait(10)
-            
-# カレンダーボタン押す
-try:
-    button = driver.find_element(By.XPATH, "//button[contains(., '空室カレンダー')]")
-    button.click()
-    driver.implicitly_wait(5)
-except:
-    pass
-            iframes = driver.find_elements(By.TAG_NAME, "iframe")
 
-            if not iframes:
-                rows.append({
-                    "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "space_name": space_name,
-                    "page_url": url,
-                    "iframe_index": "",
-                    "iframe_src": "NO_IFRAME"
-                })
-            else:
-                for i, iframe in enumerate(iframes):
-                    rows.append({
-                        "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "space_name": space_name,
-                        "page_url": url,
-                        "iframe_index": i,
-                        "iframe_src": iframe.get_attribute("src")
-                    })
+            # カレンダーボタン押す（ゆる探索）
+            try:
+                buttons = driver.find_elements(By.TAG_NAME, "button")
+                for b in buttons:
+                    if "カレンダー" in b.text:
+                        b.click()
+                        driver.implicitly_wait(5)
+                        break
+            except:
+                pass
 
-        pd.DataFrame(rows).to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
-        print(f"saved: {OUTPUT_FILE}")
+            # 画面テキスト取得
+            body_text = driver.find_element(By.TAG_NAME, "body").text
+
+            rows.append({
+                "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "space_name": space_name,
+                "url": url,
+                "page_text": body_text
+            })
+
+        out_df = pd.DataFrame(rows)
+        out_df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
+        print("saved")
 
     finally:
         driver.quit()
