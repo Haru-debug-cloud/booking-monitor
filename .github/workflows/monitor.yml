@@ -33,7 +33,7 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add monitor_log.csv
+          git add *.html *.csv
           git diff --cached --quiet || git commit -m "update monitor log"
           git push
           
